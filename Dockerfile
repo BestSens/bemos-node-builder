@@ -10,7 +10,6 @@ RUN dnf install -y \
         patch \
         ninja-build \
         python3 \
-        ccache \
         libgcc.i686 \
         libstdc++-devel \
         libstdc++-devel.i686 \
@@ -25,12 +24,8 @@ RUN dnf install -y \
 ADD https://github.com/BestSens/musl-build-image/releases/download/v1.3.7/arm-bemos-linux-musleabihf_1.3.7.tar.gz /
 ENV PATH="/opt/x-tools/arm-bemos-linux-musleabihf/bin:$PATH"
 
-ENV CCACHE_DIR="/ccache"
-
 COPY run.sh /work/run.sh
 COPY fix_ninja_build.patch /work/fix_ninja_build.patch
 RUN chmod +x /work/run.sh
-
-VOLUME /ccache
 
 ENTRYPOINT [ "/work/run.sh" ]

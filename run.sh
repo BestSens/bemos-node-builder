@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
-export CC="ccache arm-bemos-linux-musleabihf-gcc -march=armv7-a -mfloat-abi=hard -mtune=cortex-a9 -flax-vector-conversions"
-export CXX="ccache arm-bemos-linux-musleabihf-g++ -march=armv7-a -mfloat-abi=hard -mtune=cortex-a9"
-export CC_host="ccache gcc -m32"
-export CXX_host="ccache g++ -m32"
+export CC="arm-bemos-linux-musleabihf-gcc -march=armv7-a -mfloat-abi=hard -mtune=cortex-a9 -flax-vector-conversions"
+export CXX="arm-bemos-linux-musleabihf-g++ -march=armv7-a -mfloat-abi=hard -mtune=cortex-a9"
+export CC_host="gcc -m32"
+export CXX_host="g++ -m32"
 
 cd /work
 
