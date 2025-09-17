@@ -29,6 +29,7 @@ ENV CCACHE_DIR="/ccache"
 
 COPY run.sh /work/run.sh
 COPY fix_ninja_build.patch /work/fix_ninja_build.patch
+RUN chmod +x /work/run.sh
 
 VOLUME /ccache
 
