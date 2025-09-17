@@ -22,6 +22,7 @@ RUN dnf install -y \
     rm -rf /var/cache/dnf
 
 ADD https://github.com/BestSens/musl-build-image/releases/download/v1.3.7/arm-bemos-linux-musleabihf_1.3.7.tar.gz /
+RUN tar -xzf arm-bemos-linux-musleabihf_1.3.7.tar.gz && rm arm-bemos-linux-musleabihf_1.3.7.tar.gz
 ENV PATH="/opt/x-tools/arm-bemos-linux-musleabihf/bin:$PATH"
 
 COPY run.sh /work/run.sh
