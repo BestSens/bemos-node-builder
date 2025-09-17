@@ -12,9 +12,9 @@ tar -xf node-$1.tar.gz
 cd node-$1
 patch -p1 < ../fix_ninja_build.patch || exit 1
 
-./configure --ninja --prefix=./dist --dest-cpu=arm --cross-compiling --fully-static --dest-os=linux --with-arm-float-abi=hard
+./configure --ninja --prefix=./dist --dest-cpu=arm --cross-compiling --fully-static --dest-os=linux --with-arm-float-abi=hard || exit 1
 
-ninja -C out/Release node
+ninja -C out/Release node || exit 1
 
 mkdir -p archive/node-${1}/bin
 cp out/Release/node archive/node-${1}/bin
