@@ -1,0 +1,99 @@
+name: Build and Release Node.js ARM Binary
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      node_version:
+        description: 'Node.js version to build (e.g., v22.19.0)'
+        required: false
+        default: 'v22.19.0'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+      
+    - name: Determine Node.js version
+      id: version
+      run: |
+        if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          echo "node_version=${{ github.event.inputs.node_version }}" >> $GITHUB_OUTPUT
+        else
+          echo "node_version=v22.19.0" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Build Docker image
+      run: |
+        docker build -t bemos-node-builder .
+        
+    - name: Create output directory
+      run: mkdir -p output
+      
+    - name: Run container to build Node.js
+      run: |
+        docker run --rm \
+          -v $(pwd)/output:/out \
+          bemos-node-builder ${{ steps.version.outputs.node_version }}
+          
+    - name: List output files
+      run: |
+        ls -la output/
+        echo "OUTPUT_FILE=$(ls output/node-*.tar.gz | head -1)" >> $GITHUB_ENV
+        
+    - name: Extract version from tag
+      if: startsWith(github.ref, 'refs/tags/')
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+      
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/')
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_version.outputs.VERSION }}
+        release_name: Node.js ${{ steps.version.outputs.node_version }} ARM Binary ${{ steps.get_version.outputs.VERSION }}
+        body: |
+          Node.js ${{ steps.version.outputs.node_version }} compiled for ARM architecture (armv7-a with hard float ABI).
+          
+          This binary is statically linked and compiled for the BeMOS platform.
+          
+          **Build Details:**
+          - Node.js Version: ${{ steps.version.outputs.node_version }}
+          - Target Architecture: ARM (armv7-a)
+          - Float ABI: Hard
+          - CPU Tune: Cortex-A9
+          - Linkage: Fully static
+          
+          Download the attached `node-${{ steps.version.outputs.node_version }}-out-*.tar.gz` file and extract it to get the Node.js binary.
+        draft: false
+        prerelease: false
+        
+    - name: Upload Release Asset
+      if: startsWith(github.ref, 'refs/tags/')
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ${{ env.OUTPUT_FILE }}
+        asset_name: node-${{ steps.version.outputs.node_version }}-arm-binary.tar.gz
+        asset_content_type: application/gzip
+        
+    - name: Upload build artifact (for non-tag pushes)
+      if: "!startsWith(github.ref, 'refs/tags/')"
+      uses: actions/upload-artifact@v4
+      with:
+        name: node-${{ steps.version.outputs.node_version }}-arm-binary
+        path: output/node-*.tar.gz
+        retention-days: 30
